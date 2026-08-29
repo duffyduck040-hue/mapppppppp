@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rise Online — Death Valley Radar</title>
+<style>
+:root{--bg:#090b0d;--panel:#111519;--panel2:#171c21;--line:#2b3239;--text:#edf1f4;--muted:#8d98a1;--gold:#d5aa55;--green:#65d38a;--red:#f06b6b;--blue:#67a9ff;--purple:#bd8cff;--orange:#ffae68;--yellow:#f6d35d}
+*{box-sizing:border-box}html,body{height:100%;margin:0}body{background:var(--bg);color:var(--text);font:13px Inter,Segoe UI,Arial,sans-serif;overflow:hidden}
+.app{height:100vh;display:grid;grid-template-rows:58px 1fr 30px}
+.top{display:flex;align-items:center;gap:18px;padding:0 18px;background:#0d1013;border-bottom:1px solid var(--line)}
+.logo{font-weight:800;letter-spacing:.5px;font-size:15px}.logo span{color:var(--gold)}.server{font-size:11px;color:var(--muted);padding-left:12px;border-left:1px solid var(--line)}
+.live{margin-left:auto;display:flex;align-items:center;gap:7px;color:var(--green);font-weight:700}.live i{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
+.content{min-height:0;display:grid;grid-template-columns:255px 1fr 285px}
+.side{background:var(--panel);overflow:auto}.left{border-right:1px solid var(--line)}.right{border-left:1px solid var(--line)}
+.section{padding:14px;border-bottom:1px solid var(--line)}.section h3{font-size:10px;color:#aeb6bc;letter-spacing:1.1px;margin:0 0 10px}
+.search{width:100%;background:#0b0e11;border:1px solid var(--line);color:var(--text);padding:10px;border-radius:5px;outline:0}.search:focus{border-color:#59636c}
+.filters{display:grid;gap:5px;margin-top:10px}.filter{border:1px solid transparent;background:transparent;color:#c7cdd2;text-align:left;padding:8px;border-radius:5px;display:flex;justify-content:space-between;cursor:pointer}.filter:hover,.filter.active{background:#1b2126;border-color:#333b42;color:white}.filter b{color:var(--muted);font-weight:600}
+.layer{display:flex;align-items:center;gap:9px;padding:7px 0;color:#c8cdd2}.layer input{accent-color:var(--gold)}
+.maparea{position:relative;min-width:0;overflow:hidden;background:#080a0c}.mapviewport{position:absolute;inset:0;cursor:grab;overflow:hidden}.mapviewport.dragging{cursor:grabbing}.world{position:absolute;left:50%;top:50%;transform-origin:center;will-change:transform}.mapimg{display:block;width:830px;height:819px;user-select:none;-webkit-user-drag:none;filter:saturate(.92) contrast(1.02)}
+.overlay{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.38))}
+.grid{position:absolute;inset:0;opacity:.08;background-image:linear-gradient(rgba(255,255,255,.15) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.15) 1px,transparent 1px);background-size:80px 80px;pointer-events:none}
+.toolbar{position:absolute;z-index:5;top:14px;left:14px;display:flex;gap:6px}.tool{background:#11161aee;border:1px solid #3a4249;color:#e5e9ec;padding:8px 11px;border-radius:5px;cursor:pointer}.tool:hover{border-color:#67717a}.tool.active{border-color:var(--gold);color:var(--gold)}
+.zoom{position:absolute;right:14px;bottom:55px;z-index:5;display:grid;gap:4px}.zoom button{width:34px;height:34px;background:#11161aee;border:1px solid #3a4249;color:#fff;border-radius:5px;font-size:17px;cursor:pointer}
+.coord{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:5;background:#101419dd;border:1px solid #343c43;padding:6px 10px;border-radius:4px;color:#aeb6bc;font-size:11px}
+.marker{position:absolute;z-index:4;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer}.pin{width:17px;height:17px;border-radius:50%;border:3px solid #0b0d0f;box-shadow:0 0 0 1px #fff5,0 0 10px currentColor}.label{position:absolute;left:12px;top:-4px;white-space:nowrap;background:#0c1013e8;border:1px solid #303840;border-radius:4px;padding:4px 6px;box-shadow:0 3px 10px #0008}.label b{font-size:10px}.label small{display:block;color:#9ba5ad;margin-top:2px;font-size:9px}.marker.hidden{display:none}.pulse{animation:pulse 1.8s infinite}@keyframes pulse{50%{box-shadow:0 0 0 5px #fff0,0 0 16px currentColor}}
+.heat{position:absolute;width:180px;height:180px;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(255,90,60,.28),rgba(255,90,60,.09) 38%,transparent 70%);pointer-events:none;z-index:2}
+.eventbar{position:absolute;top:14px;right:14px;z-index:5;background:#101419e8;border:1px solid #343c43;border-radius:5px;padding:8px 10px;font-size:10px;color:#adb5bb}.eventbar strong{color:#fff}.eventbar .ok{color:var(--green)}
+.card{border-bottom:1px solid var(--line);padding:13px}.cardtop{display:flex;justify-content:space-between;gap:8px}.name{font-weight:750}.badge{font-size:9px;padding:3px 5px;border-radius:3px;border:1px solid #3b444c;color:#aeb6bc}.meta{color:var(--muted);font-size:10px;margin-top:5px}.timer{font:700 20px ui-monospace,SFMono-Regular,Consolas,monospace;margin-top:8px}.ready{color:var(--green);font-size:10px;margin-top:4px}.running{color:var(--orange)}.actions{display:flex;gap:5px;margin-top:8px}.actions button{flex:1;background:#1b2126;border:1px solid #343c43;color:#dfe4e7;padding:6px;border-radius:4px;cursor:pointer;font-size:10px}.actions button:hover{border-color:#707b84}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:6px}.leg{display:flex;align-items:center;gap:7px;color:#b9c1c7;font-size:10px}.dot{width:8px;height:8px;border-radius:50%}
+.footer{background:#0d1013;border-top:1px solid var(--line);display:flex;align-items:center;padding:0 12px;color:#7f8991;font-size:10px}.footer span{margin-left:auto}
+@media(max-width:900px){.content{grid-template-columns:190px 1fr}.right{display:none}}@media(max-width:650px){.content{grid-template-columns:1fr}.left{display:none}.top .server{display:none}.mapimg{width:830px;height:819px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+  <div class="logo">RISE ONLINE <span>• DEATH VALLEY RADAR</span></div>
+  <div class="server">REMOTE MAP VIEW</div>
+  <div class="live"><i></i> RADAR ONLINE</div>
+</header>
+<div class="content">
+<aside class="side left">
+  <div class="section">
+    <h3>MAP ARAMA</h3>
+    <input id="search" class="search" placeholder="Ancient, boss, portal...">
+    <div id="filters" class="filters"></div>
+  </div>
+  <div class="section">
+    <h3>KATMANLAR</h3>
+    <label class="layer"><input type="checkbox" data-layer="ancient" checked> ⛏ Ancient</label>
+    <label class="layer"><input type="checkbox" data-layer="boss" checked> 👑 Boss</label>
+    <label class="layer"><input type="checkbox" data-layer="portal" checked> 🌀 Portal</label>
+    <label class="layer"><input type="checkbox" data-layer="event" checked> ⚔ Event</label>
+    <label class="layer"><input type="checkbox" data-layer="heat" checked> 🔥 Heatmap</label>
+  </div>
+  <div class="section">
+    <h3>LEJANT</h3>
+    <div class="legend">
+      <div class="leg"><i class="dot" style="background:#65d38a"></i> Ancient</div>
+      <div class="leg"><i class="dot" style="background:#f06b6b"></i> Boss</div>
+      <div class="leg"><i class="dot" style="background:#bd8cff"></i> Portal</div>
+      <div class="leg"><i class="dot" style="background:#ffae68"></i> Event</div>
+    </div>
+  </div>
+</aside>
+<main class="maparea">
+  <div class="toolbar">
+    <button class="tool active" id="btnMap">MAP</button>
+    <button class="tool" id="btnReset">RESET VIEW</button>
+  </div>
+  <div class="eventbar"><strong>DEATH VALLEY</strong> · <span class="ok">REMOTE VIEW</span></div>
+  <div id="viewport" class="mapviewport">
+    <div id="world" class="world">
+      <img class="mapimg" src="death-valley.png" alt="Death Valley">
+      <div id="heatLayer"></div>
+      <div id="markers"></div>
+    </div>
+  </div>
+  <div class="grid"></div><div class="overlay"></div>
+  <div class="zoom"><button id="plus">+</button><button id="minus">−</button></div>
+  <div class="coord" id="coord">Haritayı sürükle • Zoom ile uzaklaşıp yaklaş</div>
+</main>
+<aside class="side right">
+  <div class="section"><h3>DEATH VALLEY DURUMU</h3><div class="meta" style="margin-bottom:8px">Ancient respawn süreleri 16 Temmuz 2026 tarihli 14.0.0 sonrası verilerle günceldir. Harita üzerindeki koordinatlar doğrulama bekleyen yer tutuculardır.</div><div style="color:#65d38a;font-weight:700">● RADAR HAZIR</div><div class="meta">Bu arayüz uzaktan harita görüntüleme içindir.</div></div>
+  <div id="cards"></div>
+</aside>
+</div>
+<footer class="footer">Rise Death Valley Radar V4 · Oyuncu konumu göstermez · Ancient süreleri güncel<span>Map: Death Valley</span></footer>
+</div>
+<script>
+const points=[
+{id:1,name:'Ancient Tree',cat:'ancient',label:'WOODCUTTING',color:'#65d38a',x:280,y:505,time:3600,status:'READY'},
+{id:2,name:'Ancient Mine',cat:'ancient',label:'MINING',color:'#67a9ff',x:512,y:198,time:4200,status:'READY'},
+{id:3,name:'Ancient Stone',cat:'ancient',label:'QUARRYING',color:'#c0c7cd',x:806,y:362,time:3000,status:'READY'},
+{id:4,name:'Ancient Excavation',cat:'ancient',label:'ARCHAEOLOGY',color:'#ffae68',x:512,y:500,time:6000,status:'READY'},
+{id:5,name:'Ancient Beast',cat:'ancient',label:'SKINNING',color:'#f06b6b',x:470,y:735,time:4800,status:'READY'},
+{id:6,name:'Ancient Basket',cat:'ancient',label:'HARVESTING',color:'#f6d35d',x:770,y:628,time:4800,status:'READY'},
+{id:7,name:'Ancient Bush',cat:'ancient',label:'HERBALISM',color:'#bd8cff',x:214,y:344,time:2400,status:'READY'},
+{id:8,name:'Death Valley Boss Zone',cat:'boss',label:'BOSS',color:'#f06b6b',x:420,y:410,time:0,status:'INFO'},
+{id:9,name:'Acid Portal',cat:'portal',label:'PORTAL',color:'#bd8cff',x:650,y:250,time:0,status:'INFO'},
+{id:10,name:'Lava Portal',cat:'portal',label:'PORTAL',color:'#bd8cff',x:650,y:520,time:0,status:'INFO'},
+{id:11,name:'Void Portal',cat:'portal',label:'PORTAL',color:'#bd8cff',x:300,y:650,time:0,status:'INFO'},
+{id:12,name:'Death Valley Event',cat:'event',label:'EVENT',color:'#ffae68',x:560,y:390,time:0,status:'INFO'}
+];
+const catNames={all:'TÜMÜ',ancient:'ANCIENT',boss:'BOSS',portal:'PORTAL',event:'EVENT'};
+let active='all', layers={ancient:true,boss:true,portal:true,event:true,heat:true};
+const markers=document.getElementById('markers'),cards=document.getElementById('cards'),filters=document.getElementById('filters'),search=document.getElementById('search'),heatLayer=document.getElementById('heatLayer');
+Object.entries(catNames).forEach(([k,v])=>{const b=document.createElement('button');b.className='filter '+(k==='all'?'active':'');b.dataset.cat=k;b.innerHTML=`<span>${v}</span><b>${k==='all'?points.length:points.filter(p=>p.cat===k).length}</b>`;b.onclick=()=>{active=k;document.querySelectorAll('.filter').forEach(x=>x.classList.toggle('active',x.dataset.cat===k));render()};filters.appendChild(b)});
+function fmt(s){s=Math.max(0,Math.floor(s));let h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return [h,m,x].map(v=>String(v).padStart(2,'0')).join(':')}
+function visible(p){let q=search.value.trim().toLowerCase();return (active==='all'||p.cat===active)&&(!q||p.name.toLowerCase().includes(q)||p.label.toLowerCase().includes(q))&&layers[p.cat]}
+function render(){
+ markers.innerHTML='';cards.innerHTML='';heatLayer.innerHTML='';
+ if(layers.heat){[[390,400,220],[650,350,190],[260,600,160]].forEach(a=>{let h=document.createElement('div');h.className='heat';h.style.left=a[0]+'px';h.style.top=a[1]+'px';h.style.width=a[2]+'px';h.style.height=a[2]+'px';heatLayer.appendChild(h)})}
+ points.filter(visible).forEach(p=>{
+   let m=document.createElement('div');m.className='marker '+(p.cat==='boss'?'pulse':'');m.style.left=p.x+'px';m.style.top=p.y+'px';m.style.color=p.color;
+   m.innerHTML=`<div class="pin" style="background:${p.color};color:${p.color}"></div><div class="label"><b>${p.name}</b><small>${p.label}</small></div>`;
+   m.onclick=()=>select(p);markers.appendChild(m);
+   let c=document.createElement('div');c.className='card';
+   c.innerHTML=`<div class="cardtop"><div class="name">${p.name}</div><div class="badge">${p.label}</div></div><div class="meta">${p.cat.toUpperCase()}</div><div class="timer" data-timer="${p.id}">${p.time?fmt(p.time):'—'}</div><div class="${p.time?'ready':'meta'}" data-status="${p.id}">${p.time?'● '+p.status:'Harita bilgisi / manuel takip'}</div>${p.time?'<div class="actions"><button data-action="collect" data-id="'+p.id+'">TOPLANDI</button><button data-action="reset" data-id="'+p.id+'">RESET</button></div>':''}`;
+   cards.appendChild(c);
+ });
+}
+function select(p){document.getElementById('coord').textContent=`${p.name} · X ${p.x} · Y ${p.y}`;scale=1.25;tx=430-p.x*scale;ty=410-p.y*scale;apply()}
+document.querySelectorAll('[data-layer]').forEach(x=>x.onchange=()=>{layers[x.dataset.layer]=x.checked;render()});
+search.oninput=render;
+let scale=1,tx=0,ty=0,drag=false,sx=0,sy=0;const vp=document.getElementById('viewport'),world=document.getElementById('world');
+function apply(){world.style.transform=`translate(-50%,-50%) translate(${tx}px,${ty}px) scale(${scale})`}
+function zoom(f){scale=Math.max(.55,Math.min(3.5,scale*f));apply()}
+document.getElementById('plus').onclick=()=>zoom(1.2);document.getElementById('minus').onclick=()=>zoom(.83);
+document.getElementById('btnReset').onclick=()=>{scale=1;tx=0;ty=0;apply();document.getElementById('coord').textContent='Haritayı sürükle • Zoom ile uzaklaşıp yaklaş'};
+vp.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY<0?1.12:.89)},{passive:false});
+vp.addEventListener('mousedown',e=>{drag=true;sx=e.clientX-tx;sy=e.clientY-ty;vp.classList.add('dragging')});
+window.addEventListener('mouseup',()=>{drag=false;vp.classList.remove('dragging')});
+window.addEventListener('mousemove',e=>{if(!drag)return;tx=e.clientX-sx;ty=e.clientY-sy;apply()});
+let touch=null;
+vp.addEventListener('touchstart',e=>{if(e.touches.length===1)touch={x:e.touches[0].clientX-tx,y:e.touches[0].clientY-ty}});
+vp.addEventListener('touchmove',e=>{if(e.touches.length===1&&touch){tx=e.touches[0].clientX-touch.x;ty=e.touches[0].clientY-touch.y;apply()}},{passive:true});
+vp.addEventListener('touchend',()=>touch=null);
+const countdowns={};
+function setCollected(id){
+ const p=points.find(x=>x.id===id); if(!p||!p.time)return;
+ countdowns[id]={end:Date.now()+p.time*1000};
+ p.status='COUNTDOWN'; render();
+}
+function setReset(id){
+ const p=points.find(x=>x.id===id); if(!p||!p.time)return;
+ delete countdowns[id]; p.status='READY'; render();
+}
+function tick(){
+ let changed=false;
+ for(const p of points){ if(!countdowns[p.id]) continue;
+   const left=Math.max(0,Math.ceil((countdowns[p.id].end-Date.now())/1000));
+   p._left=left; p.status=left?'RESPAWN':'READY';
+   if(left===0) delete countdowns[p.id];
+   changed=true;
+ }
+ if(changed){
+   document.querySelectorAll('[data-timer]').forEach(el=>{const p=points.find(x=>x.id==el.dataset.timer); if(p) el.textContent=fmt(p._left ?? p.time)});
+   document.querySelectorAll('[data-status]').forEach(el=>{const p=points.find(x=>x.id==el.dataset.status); if(p) el.textContent=p.status==='READY'?'● READY':(p.status==='RESPAWN'?'● RESPAWN':'● '+p.status)});
+ }
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-action]'); if(!b)return; const id=Number(b.dataset.id); b.dataset.action==='collect'?setCollected(id):setReset(id)});
+setInterval(tick,1000);
+apply();render();
+</script>
+</body>
+</html>

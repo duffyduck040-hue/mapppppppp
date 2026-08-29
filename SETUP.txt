@@ -1,0 +1,8 @@
+GITHUB PAGES KURULUMU
+
+1. Bu klasördeki dosyaları repository ana dizinine yükle.
+2. index.html ve death-valley.png aynı klasörde olsun.
+3. Settings > Pages > Deploy from branch > main > /(root).
+4. Site açıldıktan sonra Ctrl+F5 yap.
+
+NOT: Ancient timerları güncel verilerle ayarlanmıştır. Harita marker koordinatları doğrulanmadan gerçek konum olarak kullanılmamalıdır.
